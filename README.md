@@ -47,3 +47,12 @@ Here are the locations of some important files:
 To view your dapp, open your browser to http://localhost:5000 for the DappStarter Workspace.
 
 We ♥️ developers and want you to have an awesome experience. You should be experiencing Dappiness at this point. If not, let us know and we will help. Join our [Discord](https://discord.gg/XdtJfu8W) or hit us up on Twitter [@Decentology](https://twitter.com/decentology).
+
+## Scenario
+
+1. Acc1 registers in the platform
+2. Acc1 adding new NFT to local collection
+3. Acc1 grant read own EHR permission to acc2
+4. Acc2 read EHR data owned by Acc1
+5. Acc1 revoke the permission from Acc2
+6. Acc2 fails to read the data

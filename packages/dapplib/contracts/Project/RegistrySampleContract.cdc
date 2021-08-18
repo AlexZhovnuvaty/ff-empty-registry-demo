@@ -2,7 +2,7 @@ import NonFungibleToken from Flow.NonFungibleToken
 import RegistryInterface from Project.RegistryInterface
 import RegistryService from Project.RegistryService
 
-pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
+pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
 
     // Maps an address (of the customer/DappContract) to the amount
     // of tenants they have for a specific RegistryContract.
@@ -25,6 +25,10 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
 
         access(contract) fun updateTotalSupply() {
             self.totalSupply = self.totalSupply + (1 as UInt64)
+        }
+
+        access(contract) fun getTotalSupply(): UInt64 {
+            return self.totalSupply
         }
 
         access(self) let minter: @NFTMinter
@@ -70,13 +74,12 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
     pub let TenantStoragePath: StoragePath
     pub let TenantPublicPath: PublicPath
 
-
+    pub var totalSupply: UInt64
     // Events
     //
     pub event ContractInitialized()
-    pub event NFTAdded(id: UInt64, from: Address?) 
-    pub event ConsentGranted(id: UInt64, from: Address?)
-    pub event ConsentRevoked(id: UInt64, to: Address?)
+    pub event Withdraw(id: UInt64, from: Address?)
+    pub event Deposit(id: UInt64, to: Address?)
 
     // NFT Resource
     //
@@ -86,19 +89,19 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
-        pub var metadata: {String: String}
+        // pub var metadata: {String: String}
 
         // upon creating (or "minting") this NFT Resource,
         // we must pass in a reference to a Tenant to update its totalSupply.
-        init(_tenant: &Tenant{ITenantMinter}, _metadata: {String: String}) {
+        init(_tenant: &Tenant{ITenantMinter}) {
             // initialize NFT fields
-            self.id = _tenant.totalSupply
-            self.metadata = _metadata
+            self.id = (1 as UInt64) //_tenant.getTotalSupply()
+            // self.metadata = _metadata
 
             // update the Tenant's totalSupply
             _tenant.updateTotalSupply()
-            // update the RegistryNFTContract's totalSupply
-            // RegistryNFTContract.totalSupply = RegistryNFTContract.totalSupply + (1 as UInt64)
+            // update the RegistrySampleContract's totalSupply
+            // RegistrySampleContract.totalSupply = RegistrySampleContract.totalSupply + (1 as UInt64)
         }
     }
 
@@ -106,7 +109,7 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
         // pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         // pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-
+        pub fun getMetaData(): {String: String}
         // pub fun borrowEntireNFT(id: UInt64): &NFT? {
         //     // If the result isn't nil, the id of the returned reference
         //     // should be the same as the argument to the function
@@ -121,49 +124,55 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
     // 
     // A basic NFT Collection
     //
-    pub resource Collection: NonFungibleToken.CollectionPublic, INFTCollectionReviewer {
+    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, INFTCollectionReviewer {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
+        pub var metaData: {String: String}
+        
         init () {
             self.ownedNFTs <- {}
+            self.metaData = {}
         }
 
-        // // withdraw removes an NFT from the collection and moves it to the caller
-        // pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-        //     let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+        // withdraw removes an NFT from the collection and moves it to the caller
+        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
+            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
 
-        //     emit Withdraw(id: token.id, from: self.owner?.address)
+            emit Withdraw(id: token.id, from: self.owner?.address)
 
-        //     return <-token
-        // }
+            return <-token
+        }
 
-        // // deposit takes a NFT and adds it to the collections dictionary
-        // // and adds the ID to the id array
-        // pub fun deposit(token: @NonFungibleToken.NFT) {
-        //     let token <- token as! @RegistryNFTContract.NFT
+        // deposit takes a NFT and adds it to the collections dictionary
+        // and adds the ID to the id array
+        pub fun deposit(token: @NonFungibleToken.NFT) {
+            let token <- token as! @RegistrySampleContract.NFT
 
-        //     let id: UInt64 = token.id
+            let id: UInt64 = token.id
 
-        //     // add the new token to the dictionary which removes the old one
-        //     let oldToken <- self.ownedNFTs[id] <- token
+            // add the new token to the dictionary which removes the old one
+            let oldToken <- self.ownedNFTs[id] <- token
 
-        //     emit Deposit(id: id, to: self.owner?.address)
+            emit Deposit(id: id, to: self.owner?.address)
 
-        //     destroy oldToken
-        // }
+            destroy oldToken
+        }
 
         // getIDs returns an array of the IDs that are in the collection
         pub fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
+        pub fun getMetaData(): {String: String} {
+            return self.metaData
+        }
         // // borrowNFT gets a reference to an NFT in the collection
         // // so that the caller can read its id and call its methods
-        // pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-        //     return &self.ownedNFTs[id] as &NonFungibleToken.NFT
-        // }
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
+            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+        }
 
         // // borrowEntireNFT gets a reference to an NFT in the collection
         // // so that the caller can read its id & metadata and call its methods
@@ -200,10 +209,10 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
         // and deposits it in the recipients collection using 
         // their collection reference
         //
-        pub fun mintNFT(tenant: &Tenant{ITenantMinter}, recipient: &RegistrySampleContract.Collection{NonFungibleToken.CollectionPublic}, metadata: {String: String}) {
+        pub fun mintNFT(tenant: &Tenant{ITenantMinter}, recipient: &RegistrySampleContract.Collection{NonFungibleToken.CollectionPublic}) {
 
             // create a new NFT
-            var newNFT <- create NFT(_tenant: tenant, _metadata: metadata)
+            var newNFT <- create NFT(_tenant: tenant)
 
             // deposit it in the recipient's account using their reference
             recipient.deposit(token: <-newNFT)
@@ -212,6 +221,7 @@ pub contract RegistrySampleContract: RegistryInterface, NonFungibleToken {
 
     init() {
         // Initialize clientTenants
+        self.totalSupply = 0
         self.clientTenants = {}
 
         // Set Named paths

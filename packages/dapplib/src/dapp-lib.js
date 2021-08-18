@@ -42,7 +42,7 @@ module.exports = class DappLib {
         proposer: data.signer,
       }
     },
-      'registry_receive_auth_nft'
+      'registry_1_receive_auth_nft'
     );
 
     return {
@@ -60,7 +60,7 @@ module.exports = class DappLib {
         proposer: data.signer,
       }
     },
-      'registry_receive_tenant'
+      'registry_2_receive_tenant'
     );
 
     return {

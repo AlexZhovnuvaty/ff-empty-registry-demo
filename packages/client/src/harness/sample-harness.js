@@ -32,7 +32,7 @@ export default class SampleHarness extends LitElement {
       
         <!-- Registry -->
       
-        <action-card title="Registry - Get Auth NFT"
+        <action-card title="1. Registry - Get Auth NFT"
           description="Register a Tenant with the RegistryService to get an AuthNFT" action="receiveAuthNFT" method="post"
           fields="signer">
           <account-widget field="signer" label="Account">
@@ -45,7 +45,7 @@ export default class SampleHarness extends LitElement {
           </account-widget>
         </action-card>
       
-        <action-card title="RegistrySampleContract - Get Tenant"
+        <action-card title="2. RegistrySampleContract - Get Tenant"
           description="Get an instance of a Tenant from RegistrySampleContract to have your own data" action="receiveTenant"
           method="post" fields="signer">
           <account-widget field="signer" label="Account">
@@ -58,7 +58,20 @@ export default class SampleHarness extends LitElement {
           <account-widget field="account" label="Account">
           </account-widget>
         </action-card>
-      
+
+        <action-card title="3. RegistrySampleContract - Provision Account" description="Set up an account to have a Collection"
+          action="provisionAccountEHR" method="post" fields="acct">
+          <account-widget field="acct" label="Account">
+          </account-widget>
+        </action-card>
+
+        <action-card title="4. RegistrySampleContract - Add EHR hash"
+          description="Add EHR hash to your own data" action="insertEHRHash"
+          method="post" fields="signer ehr_hash">
+          <account-widget field="signer" label="Account">
+          </account-widget>
+          <text-widget field="ehr_hash" label="EHR hash" placeholder="0x111222333"></text-widget>
+        </action-card>
       
       </page-body>
       <page-panel id="resultPanel"></page-panel>

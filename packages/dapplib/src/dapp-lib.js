@@ -52,6 +52,28 @@ module.exports = class DappLib {
     }
   }
 
+
+  static async insertEHRHash(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'registry_4_add_asset',
+      {
+        ehr_hash: { value: data.ehr_hash, type: t.String }
+      }
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
   static async receiveTenant(data) {
 
     let result = await Blockchain.post({
@@ -61,6 +83,25 @@ module.exports = class DappLib {
       }
     },
       'registry_2_receive_tenant'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionIdreceiveAuthNFT
+    }
+  }
+
+  static async provisionAccountEHR(data) {
+
+    let config = DappLib.getConfig();
+    let result = await Blockchain.post({
+      config: config,
+      roles: {
+        proposer: data.acct,
+      }
+    },
+      'registry_3_provision_account'
     );
 
     return {

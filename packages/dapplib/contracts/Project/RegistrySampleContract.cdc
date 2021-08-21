@@ -37,14 +37,22 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
             return &self.minter as &NFTMinter
         }
 
+        access(self) let reporter: @EHRReporter
+
+        pub fun reporterRef(): &EHRReporter {
+            return &self.reporter as &EHRReporter
+        }
+
         init() {
             self.totalSupply = 00
 
             self.minter <- create NFTMinter()
+            self.reporter <- create EHRReporter()
         }
 
         destroy() {
             destroy self.minter
+            destroy self.reporter
         }
     }
 
@@ -120,11 +128,25 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         // }
     }
 
+    pub resource interface INFTCollectionReporter {
+        
+        // pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
+        pub fun addEHR(ehr_hash: String)
+        // pub fun borrowEntireNFT(id: UInt64): &NFT? {
+        //     // If the result isn't nil, the id of the returned reference
+        //     // should be the same as the argument to the function
+        //     post {
+        //         (result == nil) || (result?.id == id): 
+        //             "Cannot borrow NFT reference: The ID of the returned reference is incorrect"
+        //     }
+        // }
+    }
+
     // Collection
     // 
     // A basic NFT Collection
     //
-    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, INFTCollectionReviewer {
+    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, INFTCollectionReviewer, INFTCollectionReporter {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -158,6 +180,11 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
             emit Deposit(id: id, to: self.owner?.address)
 
             destroy oldToken
+        }
+
+        pub fun addEHR(ehr_hash: String) {
+            let lastId = RegistrySampleContract.totalSupply.toString()
+            self.metaData[lastId] = ehr_hash
         }
 
         // getIDs returns an array of the IDs that are in the collection
@@ -218,6 +245,22 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
             recipient.deposit(token: <-newNFT)
         }
     }
+
+    pub resource EHRReporter {
+
+        // mintNFT
+        //
+        // mintNFT mints a new NFT with a new ID and metadata
+        // and deposits it in the recipients collection using 
+        // their collection reference
+        //
+        pub fun addEHR(tenant: &Tenant, recipient: &RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReporter}, ehr_hash: String) {
+
+            // deposit it in the recipient's account using their reference
+            recipient.addEHR(ehr_hash: ehr_hash)
+        }
+    }
+
 
     init() {
         // Initialize clientTenants

@@ -73,6 +73,13 @@ export default class SampleHarness extends LitElement {
           <text-widget field="ehr_hash" label="EHR hash" placeholder="0x111222333"></text-widget>
         </action-card>
       
+        <action-card title="7. RegistrySampleContract - Get own EHRs"
+          description="Get own EHR hash values" action="retrieveEHRHash"
+          method="post" fields="signer">
+          <account-widget field="signer" label="Account">
+          </account-widget>
+        </action-card>
+      
       </page-body>
       <page-panel id="resultPanel"></page-panel>
     `;

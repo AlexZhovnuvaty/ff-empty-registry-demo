@@ -270,5 +270,6 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         // Set Named paths
         self.TenantStoragePath = /storage/RegistrySampleContractTenant
         self.TenantPublicPath = /public/RegistrySampleContractTenant
+        self.TenantPrivatePath = /private/RegistrySampleContractTenant
     }
 }

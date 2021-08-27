@@ -74,6 +74,25 @@ module.exports = class DappLib {
     }
   }
 
+
+  static async retrieveEHRHash(data) {
+
+    let result = await Blockchain.post({
+      config: DappLib.getConfig(),
+      roles: {
+        proposer: data.signer
+      }
+    },
+      'registry_7_assets_list_own'
+    );
+
+    return {
+      type: DappLib.DAPP_RESULT_ARRAY,
+      label: 'EHR assets list',
+      result: result.callData
+    }
+  }
+
   static async receiveTenant(data) {
 
     let result = await Blockchain.post({

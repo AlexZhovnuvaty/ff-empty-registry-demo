@@ -18,6 +18,7 @@ transaction {
 
       // create a public capability for the collection
       acct.link<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReporter}>(/private/NFTCollection, target: /storage/NFTCollection)
+      acct.link<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReviewer,NonFungibleToken.CollectionPublic}>(/public/NFTCollection, target: /storage/NFTCollection)
     
       log("Gave account an NFT Collection")
     }

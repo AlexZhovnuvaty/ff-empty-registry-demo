@@ -39,6 +39,48 @@ module.exports = class DappTransactions {
 		`;
 	}
 
+	static registry_2_receive_tenant() {
+		return fcl.transaction`
+				import RegistrySampleContract from 0x01cf0e2f2f715450
+				import RegistryService from 0x01cf0e2f2f715450
+				
+				// This transaction allows any Tenant to receive a Tenant Resource from
+				// RegistrySampleContract. It saves the resource to account storage.
+				//
+				// Note that this can only be called by someone who has already registered
+				// with the RegistryService and received an AuthNFT.
+				
+				transaction() {
+				
+				  prepare(signer: AuthAccount) {
+				    // save the Tenant resource to the account if it doesn't already exist
+				    if signer.borrow<&RegistrySampleContract.Tenant{RegistrySampleContract.ITenantMinter}>(from: RegistrySampleContract.TenantStoragePath) == nil {
+				      // borrow a reference to the AuthNFT in account storage
+				      let authNFTRef = signer.borrow<&RegistryService.AuthNFT>(from: RegistryService.AuthStoragePath)
+				                        ?? panic("Could not borrow the AuthNFT")
+				      
+				      // save the new Tenant resource from RegistrySampleContract to account storage
+				      signer.save(<-RegistrySampleContract.instance(authNFT: authNFTRef), to: RegistrySampleContract.TenantStoragePath)
+				
+				      // link the Tenant resource to the public
+				      //
+				      // NOTE: this is commented out for now because it is dangerous to link
+				      // our Tenant to the public without any resource interfaces restricting it.
+				      // If you add resource interfaces that Tenant must implement, you can
+				      // add those here and then uncomment the line below.
+				      // 
+				      // signer.link<&RegistrySampleContract.Tenant{RegistrySampleContract.INFTCollectionReporter}>(RegistrySampleContract.TenantPublicPath, target: RegistrySampleContract.TenantStoragePath)
+				    }
+				  }
+				
+				  execute {
+				    log("Registered a new Tenant for RegistrySampleContract.")
+				  }
+				}
+				
+		`;
+	}
+
 	static registry_3_provision_account() {
 		return fcl.transaction`
 				import RegistrySampleContract from 0x01cf0e2f2f715450
@@ -61,6 +103,7 @@ module.exports = class DappTransactions {
 				
 				      // create a public capability for the collection
 				      acct.link<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReporter}>(/private/NFTCollection, target: /storage/NFTCollection)
+				      acct.link<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReviewer,NonFungibleToken.CollectionPublic}>(/public/NFTCollection, target: /storage/NFTCollection)
 				    
 				      log("Gave account an NFT Collection")
 				    }
@@ -124,7 +167,7 @@ module.exports = class DappTransactions {
 				// we are calling the transaction with the Tenant itself because it stores
 				// an NFTMinter resource in the Tenant resource
 				
-				transaction(recipient: Address, metadata: {String: String}) {
+				transaction(recipient: Address) {
 				    
 				    // the tenant
 				    let tenant: &RegistrySampleContract.Tenant
@@ -146,101 +189,9 @@ module.exports = class DappTransactions {
 				        let minter = self.tenant.minterRef()
 				
 				        // mint the NFT and deposit it to the recipient's collection
-				        minter.mintNFT(tenant: self.tenant, recipient: self.receiver, metadata: metadata)
+				        minter.mintNFT(tenant: self.tenant, recipient: self.receiver)
 				    }
 				}
-		`;
-	}
-
-	static registry_6_assets_list_for_sale() {
-		return fcl.transaction`
-				import RegistrySampleContract from 0x01cf0e2f2f715450
-				
-				// Lists an NFT for sale
-				
-				transaction(id: UInt64, price: UFix64) {
-				
-				  let saleCollection: &MarketplaceContract.SaleCollection
-				
-				  prepare(acct: AuthAccount) {
-				      self.saleCollection = acct.borrow<&MarketplaceContract.SaleCollection>(from: /storage/SaleCollection) 
-				          ?? panic("Could not borrow the user's Sale Collection")
-				  }
-				
-				  execute {
-				      self.saleCollection.listForSale(id: id, price: price)
-				
-				      log("Listed NFT for sale")
-				  }
-				}
-				
-		`;
-	}
-
-	static registry_7_assets_list_own() {
-		return fcl.transaction`
-				import RegistrySampleContract from 0x01cf0e2f2f715450
-				
-				// Lists an NFT for sale
-				
-				transaction() {
-				
-				  let ehrCollection: &RegistrySampleContract.Collection
-				
-				  prepare(acct: AuthAccount) {
-				      self.ehrCollection = acct.borrow<&RegistrySampleContract.Collection>(from: RegistrySampleContract.TenantStoragePath) 
-				          ?? panic("Could not borrow the user's EHR Collection")
-				  }
-				
-				  execute {
-				      self.ehrCollection.getMetaData()
-				
-				      log("Listed EHRs for user")
-				  }
-				}
-				
-		`;
-	}
-
-	static registry_2_receive_tenant() {
-		return fcl.transaction`
-				import RegistrySampleContract from 0x01cf0e2f2f715450
-				import RegistryService from 0x01cf0e2f2f715450
-				
-				// This transaction allows any Tenant to receive a Tenant Resource from
-				// RegistrySampleContract. It saves the resource to account storage.
-				//
-				// Note that this can only be called by someone who has already registered
-				// with the RegistryService and received an AuthNFT.
-				
-				transaction() {
-				
-				  prepare(signer: AuthAccount) {
-				    // save the Tenant resource to the account if it doesn't already exist
-				    if signer.borrow<&RegistrySampleContract.Tenant{RegistrySampleContract.ITenantMinter}>(from: RegistrySampleContract.TenantStoragePath) == nil {
-				      // borrow a reference to the AuthNFT in account storage
-				      let authNFTRef = signer.borrow<&RegistryService.AuthNFT>(from: RegistryService.AuthStoragePath)
-				                        ?? panic("Could not borrow the AuthNFT")
-				      
-				      // save the new Tenant resource from RegistrySampleContract to account storage
-				      signer.save(<-RegistrySampleContract.instance(authNFT: authNFTRef), to: RegistrySampleContract.TenantStoragePath)
-				
-				      // link the Tenant resource to the public
-				      //
-				      // NOTE: this is commented out for now because it is dangerous to link
-				      // our Tenant to the public without any resource interfaces restricting it.
-				      // If you add resource interfaces that Tenant must implement, you can
-				      // add those here and then uncomment the line below.
-				      // 
-				      // signer.link<&RegistrySampleContract.Tenant{RegistrySampleContract.INFTCollectionReporter}>(RegistrySampleContract.TenantPublicPath, target: RegistrySampleContract.TenantStoragePath)
-				    }
-				  }
-				
-				  execute {
-				    log("Registered a new Tenant for RegistrySampleContract.")
-				  }
-				}
-				
 		`;
 	}
 

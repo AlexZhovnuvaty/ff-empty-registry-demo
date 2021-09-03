@@ -183,8 +183,9 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         }
 
         pub fun addEHR(ehr_hash: String) {
-            let lastId = RegistrySampleContract.totalSupply.toString()
-            self.metaData[lastId] = ehr_hash
+            // let lastId = RegistrySampleContract.totalSupply.toString()
+            // self.metaData[lastId] = ehr_hash
+            self.metaData[ehr_hash] = ehr_hash
         }
 
         // getIDs returns an array of the IDs that are in the collection
@@ -270,6 +271,6 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         // Set Named paths
         self.TenantStoragePath = /storage/RegistrySampleContractTenant
         self.TenantPublicPath = /public/RegistrySampleContractTenant
-        self.TenantPrivatePath = /private/RegistrySampleContractTenant
+        // self.TenantPrivatePath = /private/RegistrySampleContractTenant
     }
 }

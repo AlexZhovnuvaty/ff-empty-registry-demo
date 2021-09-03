@@ -7,7 +7,7 @@ import RegistrySampleContract from Project.RegistrySampleContract
 // we are calling the transaction with the Tenant itself because it stores
 // an NFTMinter resource in the Tenant resource
 
-transaction(recipient: Address, metadata: {String: String}) {
+transaction(recipient: Address) {
     
     // the tenant
     let tenant: &RegistrySampleContract.Tenant
@@ -29,6 +29,6 @@ transaction(recipient: Address, metadata: {String: String}) {
         let minter = self.tenant.minterRef()
 
         // mint the NFT and deposit it to the recipient's collection
-        minter.mintNFT(tenant: self.tenant, recipient: self.receiver, metadata: metadata)
+        minter.mintNFT(tenant: self.tenant, recipient: self.receiver)
     }
 }

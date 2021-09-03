@@ -24,6 +24,37 @@ module.exports = class DappScripts {
 		`;
 	}
 
+	static registry_get_ehr_hash_values() {
+		return fcl.script`
+				import RegistrySampleContract from 0x01cf0e2f2f715450
+				
+				pub fun main(acct: Address): {String: String} {
+				  let acctEHRCollectionRef = getAccount(acct).getCapability(/public/NFTCollection)
+				            .borrow<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReviewer}>()
+				            ?? panic("Could not borrow the public capability for the recipient's account")
+				  // let borrowedEHR = acctEHRCollectionRef.getMetaData()
+				  let metadata: {String: String} = acctEHRCollectionRef.getMetaData()
+				    //?? panic("Could not borrow EHR hashes from the user's collection")
+				  //let metadata: {String: String} = borrowedEHR.metadata
+				  return metadata
+				}
+		`;
+	}
+
+	static registry_get_nfts_in_collection() {
+		return fcl.script`
+				import NonFungibleToken from 0x01cf0e2f2f715450
+				import RegistrySampleContract from 0x01cf0e2f2f715450
+				
+				pub fun main(acct: Address): [UInt64] {
+				  let acctNFTCollectionRef = getAccount(acct).getCapability(/public/NFTCollection)
+				            .borrow<&RegistrySampleContract.Collection{NonFungibleToken.CollectionPublic}>()
+				            ?? panic("Could not borrow the public capability for the recipient's account")
+				  return acctNFTCollectionRef.getIDs()
+				}
+		`;
+	}
+
 	static registry_has_auth_nft() {
 		return fcl.script`
 				import RegistryService from 0x01cf0e2f2f715450

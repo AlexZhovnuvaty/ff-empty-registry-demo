@@ -75,19 +75,67 @@ module.exports = class DappLib {
   }
 
 
-  static async retrieveEHRHash(data) {
+  static async grantAccess(data) {
 
+    let config = DappLib.getConfig();
     let result = await Blockchain.post({
-      config: DappLib.getConfig(),
+      config: config,
       roles: {
-        proposer: data.signer
+        proposer: data.acct,
       }
     },
-      'registry_7_assets_list_own'
+      'registry_5_mint_nft',
+      {
+        recipient: { value: data.recipient, type: t.Address }
+      }
     );
 
     return {
-      type: DappLib.DAPP_RESULT_ARRAY,
+      type: DappLib.DAPP_RESULT_TX_HASH,
+      label: 'Transaction Hash',
+      result: result.callData.transactionId
+    }
+  }
+
+  static async retrieveGrantAccess(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'registry_get_nfts_in_collection',
+      {
+        acct: { value: data.account, type: t.Address }
+      }
+    );
+    
+    console.log(result.callData)
+
+    return {
+      type: DappLib.DAPP_RESULT_OBJECT,
+      label: 'Granted Access list',
+      result: result.callData
+    }
+  }
+  
+  static async retrieveEHRHash(data) {
+
+    let result = await Blockchain.get({
+      config: DappLib.getConfig(),
+      roles: {
+      }
+    },
+      'registry_get_ehr_hash_values',
+      {
+        acct: { value: data.account, type: t.Address }
+      }
+    );
+    
+    console.log(result.callData)
+
+    return {
+      type: DappLib.DAPP_RESULT_OBJECT,
       label: 'EHR assets list',
       result: result.callData
     }

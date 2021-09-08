@@ -43,14 +43,15 @@ module.exports = class DappScripts {
 
 	static registry_get_nfts_in_collection() {
 		return fcl.script`
-				import NonFungibleToken from 0x01cf0e2f2f715450
+				// import NonFungibleToken from Flow.NonFungibleToken
 				import RegistrySampleContract from 0x01cf0e2f2f715450
 				
-				pub fun main(acct: Address): [UInt64] {
+				pub fun main(acct: Address): [String] {
 				  let acctNFTCollectionRef = getAccount(acct).getCapability(/public/NFTCollection)
-				            .borrow<&RegistrySampleContract.Collection{NonFungibleToken.CollectionPublic}>()
+				            .borrow<&RegistrySampleContract.Collection{RegistrySampleContract.INFTCollectionReviewer}>()
 				            ?? panic("Could not borrow the public capability for the recipient's account")
-				  return acctNFTCollectionRef.getIDs()
+				
+				  return acctNFTCollectionRef.getGrantedAddresses()
 				}
 		`;
 	}

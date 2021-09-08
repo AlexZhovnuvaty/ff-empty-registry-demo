@@ -50,9 +50,9 @@ We ♥️ developers and want you to have an awesome experience. You should be e
 
 ## Scenario
 
-1. Acc1 registers in the platform
-2. Acc1 adding new NFT to local collection
-3. Acc1 grant read own EHR permission to acc2
-4. Acc2 read EHR data owned by Acc1
-5. Acc1 revoke the permission from Acc2
-6. Acc2 fails to read the data
+1. Patient registers in the platform (Perform the following actions: Get Auth NFT -> Get Tenant -> Provision Account)
+2. Patient adding hash values for own EHR stored off-chain to a local collection (Perform the following action multiple times: Add EHR hash)
+3. Doctor registers in the platform (Perform the following actions: Get Auth NFT -> Get Tenant -> Provision Account)
+4. Patient gives a consent to access own EHR by Doctor (Patient mints an NFT that represents unique consent and stores it to the Doctor's storage)
+5. An Oracle that is responsible to store private data off-chain retrieves consent granted to Doctor (Perform the following actions: Get EHR Access)
+6. Patient revokes the consent from Doctor (out of scope of this quest)

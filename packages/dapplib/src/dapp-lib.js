@@ -113,7 +113,7 @@ module.exports = class DappLib {
     console.log(result.callData)
 
     return {
-      type: DappLib.DAPP_RESULT_OBJECT,
+      type: DappLib.DAPP_RESULT_ARRAY,
       label: 'Granted Access list',
       result: result.callData
     }

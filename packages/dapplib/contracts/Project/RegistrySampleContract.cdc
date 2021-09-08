@@ -11,6 +11,8 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
     // Add own EHR item
     pub resource interface ITenantMinter {
         access(contract) fun updateTotalSupply()
+
+        access(contract) fun getTotalSupply(): UInt64 
     }
     // Tenant
     //
@@ -44,7 +46,7 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         }
 
         init() {
-            self.totalSupply = 00
+            self.totalSupply = 0
 
             self.minter <- create NFTMinter()
             self.reporter <- create EHRReporter()
@@ -98,13 +100,15 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         pub let id: UInt64
 
         // pub var metadata: {String: String}
-
+        pub let address: String
         // upon creating (or "minting") this NFT Resource,
         // we must pass in a reference to a Tenant to update its totalSupply.
-        init(_tenant: &Tenant{ITenantMinter}) {
+        init(_tenant: &Tenant{ITenantMinter}, _address: Address) {
+        // init(_tenant: &Tenant{ITenantMinter}) {
             // initialize NFT fields
-            self.id = (1 as UInt64) //_tenant.getTotalSupply()
+            self.id = _tenant.getTotalSupply()
             // self.metadata = _metadata
+            self.address = _address.toString()
 
             // update the Tenant's totalSupply
             _tenant.updateTotalSupply()
@@ -118,14 +122,17 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         pub fun getIDs(): [UInt64]
         // pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
         pub fun getMetaData(): {String: String}
-        // pub fun borrowEntireNFT(id: UInt64): &NFT? {
-        //     // If the result isn't nil, the id of the returned reference
-        //     // should be the same as the argument to the function
-        //     post {
-        //         (result == nil) || (result?.id == id): 
-        //             "Cannot borrow NFT reference: The ID of the returned reference is incorrect"
-        //     }
-        // }
+
+        pub fun getGrantedAddresses(): [String]
+
+        pub fun borrowEntireNFT(id: UInt64): &NFT? {
+            // If the result isn't nil, the id of the returned reference
+            // should be the same as the argument to the function
+            post {
+                (result == nil) || (result?.id == id): 
+                    "Cannot borrow NFT reference: The ID of the returned reference is incorrect"
+            }
+        }
     }
 
     pub resource interface INFTCollectionReporter {
@@ -196,22 +203,36 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         pub fun getMetaData(): {String: String} {
             return self.metaData
         }
-        // // borrowNFT gets a reference to an NFT in the collection
-        // // so that the caller can read its id and call its methods
+
+        pub fun getGrantedAddresses(): [String] {
+            let ids: [UInt64] = self.getIDs()
+            var addresses: [String] = []
+            for item in ids {
+                log("item: ".concat(item.toString()))
+                let nft_item = self.borrowEntireNFT(id: item)!
+                log("nft_item: ".concat(nft_item.address))
+                addresses.append(nft_item.address)
+            }
+            log("Finish")
+            return addresses
+        }
+
+        // borrowNFT gets a reference to an NFT in the collection
+        // so that the caller can read its id and call its methods
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        // // borrowEntireNFT gets a reference to an NFT in the collection
-        // // so that the caller can read its id & metadata and call its methods
-        // pub fun borrowEntireNFT(id: UInt64): &NFT? {
-        //     if self.ownedNFTs[id] != nil {
-        //         let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-        //         return ref as! &NFT
-        //     } else {
-        //         return nil
-        //     }
-        // }
+        // borrowEntireNFT gets a reference to an NFT in the collection
+        // so that the caller can read its id & metadata and call its methods
+        pub fun borrowEntireNFT(id: UInt64): &NFT? {
+            if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &NFT
+            } else {
+                return nil
+            }
+        }
 
         destroy() {
             destroy self.ownedNFTs
@@ -240,8 +261,8 @@ pub contract RegistrySampleContract: NonFungibleToken, RegistryInterface {
         pub fun mintNFT(tenant: &Tenant{ITenantMinter}, recipient: &RegistrySampleContract.Collection{NonFungibleToken.CollectionPublic}) {
 
             // create a new NFT
-            var newNFT <- create NFT(_tenant: tenant)
-
+            var newNFT <- create NFT(_tenant: tenant, _address: self.owner!.address)
+            // var newNFT <- create NFT(_tenant: tenant)
             // deposit it in the recipient's account using their reference
             recipient.deposit(token: <-newNFT)
         }
